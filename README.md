@@ -2,12 +2,6 @@
 
 This is the code for our paper ``LaGAT: Link-aware Graph Attention Network for Drug-Drug Interaction Prediction'' (published in Bioinformatics'22).
 
-## Dependencies
-
-keras==2.4.0
-tensorflow-gpu==2.2
-scikit-learn==0.22
-
 ## Install
 
 ```
@@ -43,9 +37,9 @@ Note that the distribution of positive samples in the KEGG dataset is unbalanced
 
 The default sample file used in the code is [approved_example.txt](https://github.com/Azra3lzz/LaGAT/blob/main/raw_data/kegg/approved_example.txt). If you want to use [approved_example_balanced.txt](https://github.com/Azra3lzz/LaGAT/blob/main/raw_data/kegg/approved_example_balanced.txt), please modify the corresponding code.
 
-## Contributing
+## Training
 
-PRs accepted.
+The training adopts `5` rounds of early-stopping strategy, the maximum number of training rounds is set not to exceed `50`, and the regularization coefficient is fixed to `1e-7`; Note that by default we randomly divide the data into 5 folds and take 5-fold cross-validation to test our model. It is also possible to use the `-K `parameter to control the use of new division folds, each fold contains only drugs that appear only in this fold, to test the model's generalization ability to drugs that do not appear in the training set.
 
 ## License
 
