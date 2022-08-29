@@ -41,6 +41,3 @@ The default sample file used in the code is [approved_example.txt](https://githu
 
 The training adopts `5` rounds of early-stopping strategy, the maximum number of training rounds is set not to exceed `50`, and the regularization coefficient is fixed to `1e-7`; Note that by default we randomly divide the data into 5 folds and take 5-fold cross-validation to test our model. It is also possible to use the `-K `parameter to control the use of new division folds, each fold contains only drugs that appear only in this fold, to test the model's generalization ability to drugs that do not appear in the training set.
 
-## License
-
-MIT © Richard McRichface
