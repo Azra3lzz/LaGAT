@@ -2,6 +2,12 @@
 
 This is the code for our paper ``LaGAT: Link-aware Graph Attention Network for Drug-Drug Interaction Prediction'' (published in Bioinformatics'22).
 
+## Dependencies
+
+keras==2.4.0
+tensorflow-gpu==2.2
+scikit-learn==0.22
+
 ## Install
 
 ```
