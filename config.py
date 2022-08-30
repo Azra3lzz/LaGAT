@@ -43,7 +43,7 @@ TEST_DATA_TEMPLATE = '{dataset}_test.npy'
 RESULT_LOG={'drugbank':'drugbank_result.txt','kegg':'kegg_result.txt'}
 PERFORMANCE_LOG = 'kgcn_performance.log'
 DRUG_EXAMPLE='{dataset}_examples.npy'
-
+KFOLD_DATASET = '{dataset}_subsets.pkl'
 
 class ModelConfig(object):
     def __init__(self):

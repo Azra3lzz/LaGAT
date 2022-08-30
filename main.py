@@ -64,11 +64,7 @@ def train(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_di
     config.c = c
     config.r = r
     config.head = head
-    '''
-    config.drug_vocab = pickle_load(format_filename(PROCESSED_DATA_DIR,
-                                                             DRUG_VOCAB_TEMPLATE,
-                                                             dataset=dataset))
-    '''
+    
     config.relation_vocab_size = len(pickle_load(format_filename(PROCESSED_DATA_DIR,
                                                                  RELATION_VOCAB_TEMPLATE,
                                                                  dataset=dataset,HOP = n_depth,N = neighbor_sample_size)))
@@ -139,11 +135,7 @@ def train(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_di
         for i in range(len(test_data)):
             prediction.append([str(test_data[i,0]),str(test_data[i,1]),str(round(y_pred[i],5))])
         
-        '''
-        case = [prediction[i] for i in range(len(label)) if label[i]==test_data[i, 2:3]]
-        case.sort(key = takeThird,reverse=True)
-        np.savetxt(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_case{c}.txt',np.array(case),fmt="%s")
-        '''
+        
         np.savetxt(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_case{c}.txt',np.array(prediction),fmt="%s")
         #
         #The current notation can only be used when hop=1 and c=3
@@ -155,29 +147,7 @@ def train(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_di
             np.savetxt(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_{c}_neibortwo.txt',neibor_entity_two,fmt="%d")
             np.savetxt(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_{c}_at_one.txt',attention[0],fmt="%.3f")
             np.savetxt(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_{c}_at_two.txt',attention[1],fmt="%.3f")
-        '''
-        nerbor_attention_one = []
-        for i in range(len(neibor_entity_one)):
-            temp = []
-            num_neibor = len(neibor_entity_one[i])
-            for j in range(num_neibor):
-                temp.append((str(neibor_entity_one[i][j]),round(attention_one[0][i][j]/num_neibor,5)))
-            nerbor_attention_one.append(temp)
-        nerbor_attention_two = []
-        for i in range(len(neibor_entity_two)):
-            temp = []
-            num_neibor = len(neibor_entity_two[i])
-            for j in range(num_neibor):
-                temp.append((str(neibor_entity_two[i][j]),round(attention_two[1][i][j]/num_neibor,5)))
-            nerbor_attention_two.append(temp)
         
-        prediction = []
-        for i in range(len(test_data)):
-            prediction.append([str(test_data[i,0]),str(test_data[i,1]),str(round(y_pred[i],5)),nerbor_attention_one[i],nerbor_attention_two[i]])
-        prediction.sort(key = takeThird,reverse = True)
-        total_case = {str(prediction[i][0])+'-'+str(prediction[i][1])+','+str(prediction[i][2]):[prediction[i][3],prediction[i][4]] for i in range(len(prediction))}
-        write_log(LOG_DIR+f'/kgcn_model_{dataset}_{aggregator_type}_{c}_TotalAt.txt',log = total_case)
-        '''
     train_log['test_auc'] = auc
     train_log['test_acc'] = acc
     train_log['test_f1'] = f1
@@ -213,12 +183,7 @@ def train_M(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_
     config.head = head
     config.checkpoint_monitor = 'val_acc' 
     config.early_stopping_monitor = 'val_acc'
-
-    '''
-    config.drug_vocab = pickle_load(format_filename(PROCESSED_DATA_DIR,
-                                                             DRUG_VOCAB_TEMPLATE,
-                                                             dataset=dataset))
-    '''
+    
     config.relation_vocab_size = len(pickle_load(format_filename(PROCESSED_DATA_DIR,
                                                                  RELATION_VOCAB_TEMPLATE,
                                                                  dataset=dataset,HOP = n_depth,N = neighbor_sample_size)))
@@ -287,11 +252,7 @@ def train_M(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_
         for i in range(len(test_data)):
             prediction.append([str(test_data[i,0]),str(test_data[i,1]),str(round(y_pred[i][label[i]],5)),label[i],test_data[i,2]])
         
-        '''
-        case = [prediction[i] for i in range(len(label)) if label[i]==test_data[i, 2:3]]
-        case.sort(key = takeThird,reverse=True)
-        np.savetxt(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_case{c}.txt',np.array(case),fmt="%s")
-        '''
+        
         np.savetxt(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_case{c}.txt',np.array(prediction),fmt="%s")
         #
         #The current notation can only be used when hop=1 and c=3
@@ -303,30 +264,7 @@ def train_M(train_d,dev_d,test_d,kfold,dataset, neighbor_sample_size, ent_embed_
             np.savetxt(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_{c}_neibortwo.txt',neibor_entity_two,fmt="%d")
             np.savetxt(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_{c}_at_one.txt',attention[0],fmt="%.3f")
             np.savetxt(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_{c}_at_two.txt',attention[1],fmt="%.3f")
-        '''
-        nerbor_attention_one = []
-        for i in range(len(neibor_entity_one)):
-            temp = []
-            num_neibor = len(neibor_entity_one[i])
-            for j in range(num_neibor):
-                temp.append((str(neibor_entity_one[i][j]),round(attention_one[0][i][j]/num_neibor,5)))
-            nerbor_attention_one.append(temp)
-        nerbor_attention_two = []
-        for i in range(len(neibor_entity_two)):
-            temp = []
-            num_neibor = len(neibor_entity_two[i])
-            for j in range(num_neibor):
-                temp.append((str(neibor_entity_two[i][j]),round(attention_two[1][i][j]/num_neibor,5)))
-            nerbor_attention_two.append(temp)
         
-        label = np.argmax(y_pred,1)
-        prediction = []
-        for i in range(len(test_data)):
-            prediction.append([str(test_data[i,0]),str(test_data[i,1]),str(round(y_pred[i][label[i]],5)),label[i],test_data[i,2],nerbor_attention_one[i],nerbor_attention_two[i]])
-        prediction.sort(key = takeThird,reverse = True)
-        total_case = {str(prediction[i][0])+'-'+str(prediction[i][1])+'-'+str(prediction[i][4])+','+str(prediction[i][2])+','+str(prediction[i][3]):[prediction[i][5],prediction[i][6]] for i in range(len(prediction))}
-        write_log(LOG_DIR+f'/kgcn_model_M_{dataset}_{aggregator_type}_{c}_TotalAt.txt',log = total_case)
-        '''
     train_log['timestamp'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     write_log(format_filename(LOG_DIR, PERFORMANCE_LOG), log=train_log, mode='a')
     del model

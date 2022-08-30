@@ -10,8 +10,8 @@ from main import train,train_M
 import argparse
 from config import DRUG_EXAMPLE, RESULT_LOG, PROCESSED_DATA_DIR, LOG_DIR, MODEL_SAVED_DIR, KG_FILE, \
     EXAMPLE_FILE,  DRUG_VOCAB_TEMPLATE,TRAIN_DATA_TEMPLATE,DEV_DATA_TEMPLATE,TEST_DATA_TEMPLATE, ENTITY_VOCAB_TEMPLATE,\
-    RELATION_VOCAB_TEMPLATE, SEPARATOR, RAW_DATA_DIR,ADJ_ENTITY_TEMPLATE, ADJ_RELATION_TEMPLATE, ModelConfig
-from utils import pickle_dump, format_filename,write_log
+    RELATION_VOCAB_TEMPLATE, SEPARATOR, RAW_DATA_DIR,ADJ_ENTITY_TEMPLATE, ADJ_RELATION_TEMPLATE, KFOLD_DATASET,ModelConfig
+from utils import pickle_dump, pickle_load,format_filename,write_log
 
 def read_example_file(file_path:str,separator:str,drug_vocab:dict):
     print(f'Logging Info - Reading example file: {file_path}')
@@ -87,7 +87,7 @@ def read_kg(file_path: str, drug_vocab:dict, relation_vocab: dict, hop:int,neigh
     return adj_entity, adj_relation,subgraphid_dict
 
 
-def process_data(K:int,dataset:str,N:int,HOP:int,B:int,LR:float,ND:int,LC:int,C:int,R:int,MulHead:int):
+def process_data(K:int,dataset:str,N:int,HOP:int,B:int,LR:float,ND:int,LC:int,C:int,R:int,S:int,MulHead:int):
     drug_vocab = {}
     relation_vocab = {}
     total_examples = []
@@ -131,20 +131,75 @@ def process_data(K:int,dataset:str,N:int,HOP:int,B:int,LR:float,ND:int,LC:int,C:
         print('Logging Info - Saved:', adj_relation_file)
     
     
-    cross_validation(K,total_examples,dataset,N,HOP,B,LR,ND,LC,C,R,MulHead)
+    cross_validation(K,total_examples,dataset,N,HOP,B,LR,ND,LC,C,R,S,MulHead)
 
-
-def cross_validation(K_fold,total_examples,dataset,neighbor_sample_size,HOP,B,LR,ND,LC,C,R,MulHead):
+def cross_validation(K_fold,total_examples,dataset,neighbor_sample_size,HOP,B,LR,ND,LC,C,R,S,MulHead):
     if dataset == 'kegg':
-        #Randomly divide the dataset example into 5 parts
         examples = total_examples[0]
-        subsets=dict()
-        n_subsets=int(len(examples)/5)
-        remain=set(range(0,len(examples)-1))
-        for i in reversed(range(0,4)):
-            subsets[i]=random.sample(remain,n_subsets)
-            remain=remain.difference(subsets[i])
-        subsets[4]=remain
+        dataset_file = format_filename(PROCESSED_DATA_DIR, KFOLD_DATASET, dataset=dataset)
+        if S == 1: #test the generalization ability of the model in the cold start 
+            if not os.path.exists(dataset_file):
+                L = len(examples)#examples为numpy转换过的多重列表
+                drug_dict = defaultdict(list)
+                for i in range(L):
+                    drug_dict[examples[i][0]].append(i)
+                    drug_dict[examples[i][1]].append(i)
+                D = len(drug_dict)
+                cold_number = int(D*0.2)
+
+                cold_drug = random.sample(set(drug_dict.keys()),cold_number)
+                
+                warm_drug = set(drug_dict.keys()).difference(cold_drug)
+                
+                warm_example_index = []
+                for drug in warm_drug:
+                    for j in drug_dict[drug]:
+                        if examples[j][0] not in warm_drug or examples[j][1] not in warm_drug:
+                            drug_dict[drug].remove(j)
+                    
+                    warm_example_index += drug_dict[drug]
+                warm_example_index = list(set(warm_example_index))
+                print(len(warm_example_index))
+
+                total_example_index = [warm for warm in warm_example_index]
+                cold_drug_subsets = dict() 
+                cold_example_index = defaultdict(list)
+                for k in range(5):
+                    cold_drug_subsets[k] = random.sample(cold_drug,int(len(cold_drug)/5))
+                    temp = list(warm_drug)+list(cold_drug_subsets[k])
+                    for drug in cold_drug_subsets[k]:
+                        for index_c in drug_dict[drug]:
+                            if examples[index_c][0] not in temp or examples[index_c][1] not in temp:
+                                drug_dict[drug].remove(index_c)
+                        cold_example_index[k] += drug_dict[drug]
+
+                    cold_example_index[k] = list(set(cold_example_index[k]))
+                    total_example_index += cold_example_index[k]
+                    cold_drug = list(set(cold_drug).difference(cold_drug_subsets[k]))
+                n_total = len(total_example_index)
+                print(n_total)
+                
+                subsets = dict()
+                n_subsets = int(n_total/5)
+                print(n_subsets)
+                for l in range(5):
+                    warm_number = n_subsets - len(cold_example_index[l])
+                    print(warm_number)
+                    warm_index_list = random.sample(warm_example_index,warm_number)
+                    subsets[l] = warm_index_list + cold_example_index[l]
+                    warm_example_index = list(set(warm_example_index).difference(warm_index_list))
+                pickle_dump(dataset_file,subsets)
+            else:
+                subsets = pickle_load(dataset_file)
+        else:
+            #Randomly divide the dataset example into 5 parts
+            subsets=dict()
+            n_subsets=int(len(examples)/5)
+            remain=set(range(0,len(examples)-1))
+            for i in reversed(range(0,4)):
+                subsets[i]=random.sample(remain,n_subsets)
+                remain=remain.difference(subsets[i])
+            subsets[4]=remain
 
     #aggregator_types=['neigh','concat']
     aggregator_types=['neigh']
@@ -253,13 +308,14 @@ if __name__ == '__main__':
     parser.add_argument("-lr","--LR",help="The value of lr for each epoch of training, the default is 1e-2",type=float,default="1e-2")
     parser.add_argument("-nd","--ND",help="The value of node dimension , the default is 64",type=int,default="64")
 
-    parser.add_argument("-lc","--LC",help="this parameter decide whether to use Layer-wise concat,default is 1",type=int,default="1")
-    parser.add_argument("-c","--C",help="this parameter decide which cross-attention layer to be used,default is 3",type=int,default="3")
-    parser.add_argument("-r","--R",help="this parameter decide whether to use drug-features,default is 0",type=int,default="0")
+    parser.add_argument("-lc","--LC",help="this parameter decide whether to use Layer-wise concat, the default is 1",type=int,default="1")
+    parser.add_argument("-c","--C",help="this parameter decide which cross-attention layer to be used, the default is 3",type=int,default="3")
+    parser.add_argument("-r","--R",help="this parameter determines whether to export the test results for visualization, the default is 0",type=int,default="0")
+    parser.add_argument("-s","--S",help="this parameter determines whether to test the generalization ability of the model in the cold start scenario, the default is 0",type=int,default="0")
     parser.add_argument("-head","--MulHead",help="this parameter decide num of Multi-head attention,default is 1",type=int,default="1")
     args = parser.parse_args()
     model_config = ModelConfig()
-    process_data(1,args.D,args.N,args.HOP,args.B,args.LR,args.ND,args.LC,args.C,args.R,args.MulHead)
+    process_data(5,args.D,args.N,args.HOP,args.B,args.LR,args.ND,args.LC,args.C,args.R,args.S,args.MulHead)
 
 
 
