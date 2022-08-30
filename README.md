@@ -26,7 +26,7 @@ python run.py
   -c : this parameter decide which attention layer to be used,the default is 3(LaGAT layer)
   -r: this parameter determines whether to export the test results for visualization, the default is 0
   -K: this parameter determines whether to test the generalization ability of the model in the cold start scenario, the default is 0
-  -head : this parameter determines the number of Multi-head attention, the default is 1; it only takes effect when the -c parameter value is 1 (GAT layer)
+  -head : this parameter determines the number of Multi-head attention, the default is 1; it only takes effect when the -c parameter value is 2 (GAT layer)
 ```
 
 ## Dataset
