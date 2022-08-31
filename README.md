@@ -1,7 +1,5 @@
 # LaGAT: Link-aware Graph Attention Network for Drug-Drug Interaction Prediction
 
-This is the code for our paper ``LaGAT: Link-aware Graph Attention Network for Drug-Drug Interaction Prediction'' (published in Bioinformatics'22).
-
 ## Install
 
 ```
